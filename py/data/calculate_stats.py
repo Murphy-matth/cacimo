@@ -121,7 +121,7 @@ def combine_differences(diff_list):
 def main():
     parser = ArgumentParser(description="Process some csv files.")
 
-    # Add the csv file of the first and last scan
+    # Add the csv file of the first and last scans
     parser.add_argument(
         "--before",
         help="List of csv's containing the data from the first scan or scans",
@@ -136,6 +136,15 @@ def main():
         type=Path,
         required=True,
     )
+
+    # Add the output path
+    parser.add_argument(
+        "--output",
+        help="Where to write the output csv to",
+        type=Path,
+        required=True,
+    )
+
 
     # Parse the arguments
     args = parser.parse_args()
@@ -159,7 +168,7 @@ def main():
 
     # Write the difference to a csv
     cwd = os.getcwd()
-    with open(Path(cwd) / "output.csv", "w", newline="", encoding="utf-8") as file:
+    with open(args.output, "w", newline="", encoding="utf-8") as file:
         csv_writer = writer(file)
 
         # Wrie the headerss
