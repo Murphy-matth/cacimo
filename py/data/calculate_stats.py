@@ -20,23 +20,24 @@ def parse_csv(path: Path) -> List[Governor]:
 
     players = []
 
-    with path.open() as file:
+    with path.open(encoding="utf-8") as file:
         csv_reader = reader(file)
 
         for row in csv_reader:
             # Each row is read in as a list of strings
-            # in the format [gov_id, power, t4_kills, t5_kills, deads]
-            assert len(row) == 5
+            # in the format [gov_id, name, power, t4_kills, t5_kills, deads]
+            assert len(row) == 6
 
             def no_comma(string):
                 return string.replace(",", "")
 
             gov = Governor(
                 gov_id=float(no_comma(row[0])),
-                t4_kills=float(no_comma(row[2])),
-                t5_kills=float(no_comma(row[3])),
-                deads=float(no_comma(row[4])),
-                power=float(no_comma(row[1])),
+                t4_kills=float(no_comma(row[3])),
+                t5_kills=float(no_comma(row[4])),
+                deads=float(no_comma(row[5])),
+                power=float(no_comma(row[2])),
+                name=row[1],
             )
             players.append(gov)
 
@@ -87,6 +88,35 @@ def calculate_difference(
 
     return difference, not_found
 
+def combine_differences(diff_list):
+    def combine_list(former, latter):
+        combinded = []
+
+        # First go through all of the people in former
+        for gov in former:
+            # If you can find former in latter add
+            found = next((x for x in latter if Governor.same(x, gov)), None)
+            if found:
+                combinded.append(gov + found)
+            else:
+                combinded.append(gov)
+
+        # Next check all of the people in latter to make sure 
+        # there is not someone in latter who is not in former
+        for gov in latter:
+            # If you can find former in latter add
+            found = next((x for x in combinded if Governor.same(x, gov)), None)
+            if not found:
+                combinded.append(gov)
+
+        return combinded
+
+    result = diff_list[0]
+    for i in range(1, len(diff_list)):
+        result = combine_list(result, diff_list[i])
+
+    return result
+        
 
 def main():
     parser = ArgumentParser(description="Process some csv files.")
@@ -94,13 +124,15 @@ def main():
     # Add the csv file of the first and last scan
     parser.add_argument(
         "--before",
-        help="A csv containing the data from the first scan",
+        help="List of csv's containing the data from the first scan or scans",
+        nargs="+",
         type=Path,
         required=True,
     )
     parser.add_argument(
         "--after",
-        help="A csv containing the data from the last scan",
+        help="List of csv's containing the data from the last scan or scans",
+        nargs="+",
         type=Path,
         required=True,
     )
@@ -108,19 +140,30 @@ def main():
     # Parse the arguments
     args = parser.parse_args()
 
-    before_players = parse_csv(args.before)
-    after_players = parse_csv(args.after)
+    # Parse all of the csv's
+    before_players = [parse_csv(before) for before in args.before]
+    after_players = [parse_csv(after) for after in args.after]
 
-    difference, not_found = calculate_difference(before_players, after_players)
+    # Calculate the stats for each time period
+    differences = []
+    not_founds = []
+    for i in range(len(after_players)):
+        difference, not_found = calculate_difference(
+            before_players[i], after_players[i]
+        )
+        differences.append(difference)
+        not_founds.append(not_found)
 
-    cwd = os.getcwd()
-    
+    # Combine the stats
+    difference = combine_differences(differences)
+
     # Write the difference to a csv
-    with open(Path(cwd) / 'output.csv', 'w', newline='') as file:
+    cwd = os.getcwd()
+    with open(Path(cwd) / "output.csv", "w", newline="", encoding="utf-8") as file:
         csv_writer = writer(file)
-        
+
         # Wrie the headerss
-        csv_writer.writerow(['Governor ID', 'T4 Kills', 'T5 Kills', 'Deads', 'Power'])
+        csv_writer.writerow(Governor.csv_headers())
 
         for player in difference:
             csv_writer.writerow(player.as_csv_row())
