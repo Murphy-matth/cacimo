@@ -1,5 +1,106 @@
 from dataclasses import dataclass
-from math import floor
+from math import floor, ceil   
+
+def compute_kills(power: float) -> float:
+    def calc_extra(power, lower, upper, diff):
+        difference = power - lower
+        ratio = difference / (upper - lower)
+        return ceil(ratio * diff)
+
+    if power >= 200000000:
+        # 37.5M
+        if power == 200000000:
+            return 37500000
+        return 37500000 + calc_extra(power, 200000000, 300000000, 22500000)
+    elif power >= 150000000:
+        # 33M
+        if power == 150000000:
+            return 33000000
+        return 33000000 + calc_extra(power, 150000000, 200000000, 4500000)
+    elif power >= 125000000:
+        # 30M
+        if power == 125000000:
+            return 30000000
+        return 30000000 + calc_extra(power, 125000000, 150000000, 3000000)
+    elif power >= 100000000:
+        # 22M
+        if power == 100000000:
+            return 22000000
+        return 22000000 + calc_extra(power, 100000000, 125000000, 8000000)
+    elif power >= 90000000:
+        # 18M
+        if power == 90000000:
+            return 18000000
+        return 18000000 + calc_extra(power, 90000000, 100000000, 4000000)
+    elif power >= 80000000:
+        # 16M
+        if power == 80000000:
+            return 16000000
+        return 16000000 + calc_extra(power, 80000000, 90000000, 2000000)
+    elif power >= 70000000:
+        # 8M
+        if power == 70000000:
+            return 8000000
+        return 8000000 + calc_extra(power, 70000000, 80000000, 8000000)
+    elif power >= 60000000:
+        # 8M deads
+        return 8000000
+    elif power >= 50000000:
+        # 5M
+        if power == 50000000:
+            return 5000000
+        return 5000000 + calc_extra(power, 50000000, 60000000, 3000000)
+    else:
+        # Under 50M has no requirements
+        return 0
+
+def compute_deads(power: float) -> float:
+    def calc_extra(power, lower, upper, dead_diff):
+        difference = power - lower
+        ratio = difference / (upper - lower)
+        return ceil(ratio * dead_diff)
+
+    if power >= 200000000:
+        # 4.5M deads
+        if power == 200000000:
+            return 5500000
+        return 5500000 + calc_extra(power, 200000000, 300000000, 4500000)
+    elif power >= 150000000:
+        # 4.4M deads
+        if power == 150000000:
+            return 4400000
+        return 4400000 + calc_extra(power, 150000000, 200000000, 1100000)
+    elif power >= 125000000:
+        # 3.4M deads
+        if power == 125000000:
+            return 3300000
+        return 3300000 + calc_extra(power, 125000000, 150000000, 1100000)
+    elif power >= 100000000:
+        # 2.6M deads
+        if power == 100000000:
+            return 2600000
+        return 2600000 + calc_extra(power, 100000000, 125000000, 900000)
+    elif power >= 90000000:
+        # 2M deads
+        if power == 90000000:
+            return 2000000
+        return 2000000 + calc_extra(power, 90000000, 100000000, 600000)
+    elif power >= 80000000:
+        # 1.5M deads
+        if power == 80000000:
+            return 1500000
+        return 1500000 + calc_extra(power, 80000000, 90000000, 500000)
+    elif power >= 70000000:
+        # 1M deads
+        if power == 70000000:
+            return 1000000
+        return 1000000 + calc_extra(power, 70000000, 80000000, 500000)
+    elif power >= 50000000:
+        # 1M deads
+        return 1000000
+    else:
+        # Under 50M has no requirements
+        return 0
 
 def compute_score(gov) -> float:
     return gov.t4_kills + gov.t5_kills + (gov.deads * 10)
